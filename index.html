@@ -616,7 +616,7 @@
   setStatus('Loading AI...', '#ffaa33');
 
   const hands = new Hands({
-    locateFile: (file) => `[cdn.jsdelivr.net](https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file})`
+    locateFile: (file) => "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file
   });
   hands.setOptions({
     maxNumHands: 1,
