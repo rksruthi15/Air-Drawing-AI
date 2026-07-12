@@ -1,3 +1,4 @@
+Now I'll also re-copy to outputs to make sure the file link works, and output the full HTML inline as requested.```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -247,8 +248,8 @@
 </div>
 
 <!-- MediaPipe via CDN (Hands + Camera Utils) -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1620248257/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
 
 <script>
 (function(){
@@ -484,12 +485,6 @@
     }
 
     // Softly fade overlay artifacts (laser/eraser indicators) each frame
-    // We do NOT clear the paint fully to preserve strokes, but we can lighten with alpha for temp guides
-    // Approach: draw guides on top then they get naturally replaced next frame (no full clear)
-    // However, to avoid residue from dashed shapes, we'll clear just the guides by drawing to a temporary layer.
-    // Simpler approach: after any guide draw, immediately clear the region by saving and restoring the canvas state from offscreen?
-    // For performance and simplicity here, we will clear a transparent rect each frame before drawing guides:
-    // This won't affect existing strokes because they were drawn previously.
     ctx.save();
     ctx.globalCompositeOperation = 'destination-over';
     ctx.restore();
@@ -498,17 +493,6 @@
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       activeHand = results.multiHandLandmarks[0];
     }
-
-    // We draw temporary overlays on top by separate pass:
-    // Clear the top-most temporary overlay by painting nothing: we'll instead redraw guides fresh and rely on the frame loop.
-    // To ensure overlays don't accumulate, we can draw them then "erase" with an offscreen step; easier: snapshot current drawing first?
-    // Simpler: keep overlays ephemeral by drawing them each frame and also blit a very slight transparent rectangle to fade them.
-    // We'll do a tiny transparent clear by compositing:
-    // Draw a fully transparent rectangle with 'destination-out' small alpha? Not necessary—just redraw overlays anew each call and avoid accumulation by clearing a narrow layer.
-    // We'll use a separate overlay pass: clear a small alpha rect across the whole canvas in "source-over" with very low alpha to avoid affecting strokes significantly.
-    // But that would dim existing drawing which we don't want. Instead, we will draw overlays without accumulation by first saving the bitmap and restoring? Costly.
-    // Practical solution: Overlays are lines without fills covering the canvas; they will not accumulate strongly. We'll accept minimal buildup and provide reset on mode transitions.
-    // On mode transitions, we resetStroke which avoids stray lines.
 
     if (!activeHand){
       // No hand detected: pause and reset vectors
@@ -615,8 +599,14 @@
   // Initialize MediaPipe Hands
   setStatus('Loading AI...', '#ffaa33');
 
+  if (typeof Hands === 'undefined' || typeof Camera === 'undefined') {
+    console.error('MediaPipe scripts failed to load (Hands/Camera undefined).');
+    setStatus('AI failed to load — check network/CDN', '#ff3355');
+    return;
+  }
+
   const hands = new Hands({
-    locateFile: (file) => "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`
   });
   hands.setOptions({
     maxNumHands: 1,
@@ -672,3 +662,4 @@
 </script>
 </body>
 </html>
+```
